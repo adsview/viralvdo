@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unlock Video</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <style>
+        body { background-color: #121212; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-top: 20px; }
+        .progress-text { font-size: 14px; color: #aaa; margin-bottom: 10px; text-align: left;}
+        .progress-bar { width: 100%; background: #333; border-radius: 5px; height: 10px; margin-bottom: 20px; }
+        .progress-fill { width: 0%; background: #8a2be2; height: 100%; border-radius: 5px; transition: 0.3s; }
+        button { background: #8a2be2; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <img src="https://via.placeholder.com/300x150?text=Video" alt="Thumbnail" style="width: 100%; border-radius: 10px;">
+    
+    <div class="box">
+        <p style="color: gold; margin-top:0;">▶ Watch 3 ads to unlock</p>
+        <div class="progress-text" id="progressText">Progress: 0/3</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        
+        <button id="actionBtn">🔒 UNLOCK VIDEO</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // আপনার Adsgram Block ID দিন
+        const AdController = window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
+        
+        // রেন্ডারে হোস্ট করার পর আপনার ব্যাকএন্ড লিংকটি এখানে বসাবেন
+        const BACKEND_URL = "https://your-backend.onrender.com/api/ad-watched"; 
+
+        let watchedAds = 0;
+        const totalAds = 3;
+        const btn = document.getElementById('actionBtn');
+        const text = document.getElementById('progressText');
+        const fill = document.getElementById('progressFill');
+
+        btn.addEventListener('click', () => {
+            if (watchedAds < totalAds) {
+                AdController.show().then(() => {
+                    watchedAds++;
+                    text.innerText = `Progress: ${watchedAds}/${totalAds}`;
+                    fill.style.width = `${(watchedAds/totalAds)*100}%`;
+                    
+                    // সার্ভারে আপডেট পাঠানো
+                    fetch(BACKEND_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: tg.initDataUnsafe?.user?.id })
+                    });
+
+                    if (watchedAds === totalAds) {
+                        btn.innerHTML = "📥 DOWNLOAD NOW"; // ৩টি অ্যাড দেখা শেষ হলে বাটন আপডেট[span_0](start_span)[span_0](end_span)
+                    }
+                }).catch(() => {
+                    tg.showAlert("অ্যাডটি সম্পূর্ণ দেখতে হবে!");
+                });
+            } else {
+                tg.close(); // ভিডিও সার্ভার থেকে স্বয়ংক্রিয়ভাবে পাঠানো হবে, তাই অ্যাপ ক্লোজ করা হচ্ছে
+            }
+        });
+    </script>
+</body>
+</html>
